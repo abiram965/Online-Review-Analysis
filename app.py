@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import os
 import spacy
 from textblob import TextBlob
+from langdetect import detect
+from deep_translator import GoogleTranslator
 
 app = Flask(__name__)
 
@@ -15,20 +17,29 @@ df = pd.read_csv("flipkart.csv")
 sentiment_model = pipeline("sentiment-analysis", model="nlptown/bert-base-multilingual-uncased-sentiment")
 emotion_model = pipeline("text-classification", model="bhadresh-savani/distilbert-base-uncased-emotion")
 
-# Load NLP model for aspect extraction
+# Load NLP model
 nlp = spacy.load("en_core_web_sm")
 
+# Function to detect language and translate
+def detect_and_translate(text):
+    try:
+        lang = detect(text)
+        if lang != "en":
+            translated_text = GoogleTranslator(source='auto', target='en').translate(text)
+            return translated_text, lang
+        return text, "en"
+    except:
+        return text, "unknown"
+
+# Extract aspects for Aspect-Based Sentiment Analysis
 def extract_aspects(review):
     doc = nlp(review)
-    aspects = []
-    for token in doc:
-        if token.pos_ in ["NOUN", "PROPN"]:  # Extract nouns (product aspects)
-            aspects.append(token.text)
+    aspects = [token.text for token in doc if token.pos_ in ["NOUN", "PROPN"]]
     return aspects
 
 def classify_aspect_sentiment(review):
     aspects = extract_aspects(review)
-    sentiment_scores = {}
+    sentiment_scores = {aspect: "Neutral" for aspect in aspects}
     
     for aspect in aspects:
         sentiment = TextBlob(review).sentiment.polarity  
@@ -52,9 +63,13 @@ def analyze():
     sentiment_scores = {"Positive": 0, "Neutral": 0, "Negative": 0}
     emotions = {}
     aspect_sentiments = {}
+    translated_reviews = []
 
     for review in reviews:
-        sentiment_result = sentiment_model(review)[0]
+        translated_review, original_language = detect_and_translate(review)
+        translated_reviews.append({"original": review, "translated": translated_review, "language": original_language})
+
+        sentiment_result = sentiment_model(translated_review)[0]
         sentiment_label = sentiment_result["label"]
         
         if "1" in sentiment_label or "2" in sentiment_label:
@@ -64,12 +79,12 @@ def analyze():
         else:
             sentiment_scores["Positive"] += 1
 
-        emotion_result = emotion_model(review)[0]
-        emotion_label = emotion_result["label"]
-        emotions[emotion_label] = emotions.get(emotion_label, 0) + 1
+        emotion_result = emotion_model(translated_review)[0]
+        emotions[emotion_result["label"]] = emotions.get(emotion_result["label"], 0) + 1
         
-        aspect_sentiments.update(classify_aspect_sentiment(review))
+        aspect_sentiments.update(classify_aspect_sentiment(translated_review))
 
+    # Generate Sentiment Pie Chart
     labels = sentiment_scores.keys()
     sizes = sentiment_scores.values()
     plt.figure(figsize=(6,6))
@@ -79,16 +94,7 @@ def analyze():
     plt.savefig(chart_path)
     plt.close()
 
-    return render_template("result.html", reviews=reviews, sentiment_scores=sentiment_scores, emotions=emotions, aspect_sentiments=aspect_sentiments, chart_path=chart_path)
-
-@app.route("/aspect_analysis", methods=["POST"])
-def aspect_analysis():
-    data = request.get_json()
-    review_text = data["review"]
-
-    aspect_sentiments = classify_aspect_sentiment(review_text)
-
-    return jsonify({"review": review_text, "aspect_sentiments": aspect_sentiments})
+    return render_template("result.html", reviews=translated_reviews, sentiment_scores=sentiment_scores, emotions=emotions, aspect_sentiments=aspect_sentiments, chart_path=chart_path)
 
 if __name__ == "__main__":
     app.run(debug=True)

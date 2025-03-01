@@ -14,6 +14,15 @@
                 <li>{{ review }}</li>
             {% endfor %}
         </ul>
+        <h2>Translated Reviews:</h2>
+    <ul>
+        {% for review in reviews %}
+            <li>
+                <strong>Original ({{ review.language }}):</strong> {{ review.original }}<br>
+                <strong>Translated:</strong> {{ review.translated }}
+            </li>
+        {% endfor %}
+    </ul>
         <h2>Sentiment Distribution:</h2>
         <img src="/{{ chart_path }}" alt="Sentiment Chart">
         <h2>Emotion Analysis:</h2>
@@ -29,5 +38,6 @@
             {% endfor %}
         </ul>
     {% endif %}
+        
 </body>
 </html>
