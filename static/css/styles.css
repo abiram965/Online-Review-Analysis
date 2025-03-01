@@ -10,31 +10,81 @@ h1, h2 {
     color: #333;
 }
 
-form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 20px;
+.container {
+    max-width: 800px;
+    margin: auto;
 }
 
-select {
-    padding: 10px;
+.card {
+    border-radius: 10px;
+}
+
+.list-group-item {
     font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+}
+
+.chatbot {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    background: white;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.chatbox {
+    height: 200px;
+    overflow-y: auto;
+    border-bottom: 1px solid #ddd;
     margin-bottom: 10px;
+    padding: 5px;
+}
+
+input {
+    width: 70%;
+    padding: 5px;
 }
 
 button {
-    padding: 10px 20px;
-    font-size: 16px;
-    background-color: #4CAF50;
+    width: 25%;
+    padding: 5px;
+    background: blue;
     color: white;
     border: none;
-    border-radius: 5px;
     cursor: pointer;
 }
 
 button:hover {
-    background-color: #45a049;
+    background: darkblue;
+}
+.chatbot {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    background: white;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+.chatbox {
+    height: 200px;
+    overflow-y: auto;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 10px;
+    padding: 5px;
+}
+input {
+    width: 70%;
+    padding: 5px;
+}
+button {
+    width: 25%;
+    padding: 5px;
+    background: blue;
+    color: white;
+    border: none;
+    cursor: pointer;
 }

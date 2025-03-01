@@ -3,17 +3,22 @@
 <head>
     <title>Product Sentiment Analysis</title>
     <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <h1>Search for a Product</h1>
-    <form action="/analyze" method="post">
-        <label>Select a Product:</label>
-        <select name="product_id">
-            {% for product in products %}
-                <option value="{{ product['ID'] }}">{{ product['Product_name'] }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit">Analyze</button>
-    </form>
+<body class="bg-light">
+    <div class="container mt-5">
+        <h1 class="text-center text-primary">E-Commerce Sentiment Analysis</h1>
+        <div class="card shadow p-4">
+            <form action="/analyze" method="post">
+                <label class="form-label">Select a Product:</label>
+                <select name="product_id" class="form-select">
+                    {% for product in products %}
+                        <option value="{{ product['ID'] }}">{{ product['Product_name'] }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary mt-3 w-100">Analyze</button>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

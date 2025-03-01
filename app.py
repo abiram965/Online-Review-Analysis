@@ -7,9 +7,11 @@ import spacy
 from textblob import TextBlob
 from langdetect import detect
 from deep_translator import GoogleTranslator
+import requests
+from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
-
+socketio = SocketIO(app, async_mode="eventlet")
 # Load dataset
 df = pd.read_csv("flipkart.csv")
 
@@ -19,6 +21,9 @@ emotion_model = pipeline("text-classification", model="bhadresh-savani/distilber
 
 # Load NLP model
 nlp = spacy.load("en_core_web_sm")
+
+# Set Google Gemini API Key
+GEMINI_API_KEY = "AIzaSyDMEVcVeWi0tE9BNqf5xptjLw2X5RS9BA8"
 
 # Function to detect language and translate
 def detect_and_translate(text):
@@ -46,6 +51,26 @@ def classify_aspect_sentiment(review):
         sentiment_scores[aspect] = "Positive" if sentiment > 0 else "Negative" if sentiment < 0 else "Neutral"
     
     return sentiment_scores
+
+# Chatbot function using Google Gemini API
+def chatbot_response(user_input):
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+    headers = {"Content-Type": "application/json"}
+    data = {"contents": [{"parts": [{"text": user_input}]}]}
+
+    try:
+        response = requests.post(url, json=data, headers=headers)
+        response_json = response.json()
+        return response_json["candidates"][0]["content"]["parts"][0]["text"]
+    except Exception as e:
+        return "Sorry, I am currently unavailable."
+
+# Handle chat messages
+@socketio.on("message")
+def handle_message(data):
+    user_input = data["message"]
+    bot_response = chatbot_response(user_input)
+    emit("response", {"message": bot_response})
 
 @app.route("/")
 def home():
@@ -97,4 +122,5 @@ def analyze():
     return render_template("result.html", reviews=translated_reviews, sentiment_scores=sentiment_scores, emotions=emotions, aspect_sentiments=aspect_sentiments, chart_path=chart_path)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    socketio.run(app, debug=True)
+
