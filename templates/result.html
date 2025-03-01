@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Analysis Results</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <h1>Sentiment Analysis Results</h1>
+    {% if message %}
+        <p>{{ message }}</p>
+    {% else %}
+        <h2>Reviews:</h2>
+        <ul>
+            {% for review in reviews %}
+                <li>{{ review }}</li>
+            {% endfor %}
+        </ul>
+        <h2>Sentiment Distribution:</h2>
+        <img src="/{{ chart_path }}" alt="Sentiment Chart">
+        <h2>Emotion Analysis:</h2>
+        <ul>
+            {% for emotion, count in emotions.items() %}
+                <li>{{ emotion }}: {{ count }}</li>
+            {% endfor %}
+        </ul>
+        <h2>Aspect-Based Sentiment Analysis:</h2>
+        <ul>
+            {% for aspect, sentiment in aspect_sentiments.items() %}
+                <li>{{ aspect }}: <strong>{{ sentiment }}</strong></li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</body>
+</html>
