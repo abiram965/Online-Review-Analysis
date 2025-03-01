@@ -23,7 +23,7 @@ emotion_model = pipeline("text-classification", model="bhadresh-savani/distilber
 nlp = spacy.load("en_core_web_sm")
 
 # Set Google Gemini API Key
-GEMINI_API_KEY = "##"
+GEMINI_API_KEY = "##################"
 
 # Function to detect language and translate
 def detect_and_translate(text):
