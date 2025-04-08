@@ -9,3 +9,7 @@ deep-translator
 requests
 flask-socketio
 eventlet
+torch
+
+
+
