@@ -10,8 +10,10 @@ from deep_translator import GoogleTranslator
 import requests
 from flask_socketio import SocketIO, emit
 
+
 app = Flask(__name__)
-socketio = SocketIO(app, async_mode="eventlet")
+socketio = SocketIO(app, async_mode="threading")
+
 # Load dataset
 df = pd.read_csv("flipkart.csv")
 
@@ -121,6 +123,7 @@ def analyze():
 
     return render_template("result.html", reviews=translated_reviews, sentiment_scores=sentiment_scores, emotions=emotions, aspect_sentiments=aspect_sentiments, chart_path=chart_path)
 
-if __name__ == "__main__":
-    socketio.run(app, debug=True)
+if __name__ == '__main__':
+    socketio.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+
 
