@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Review Analysis</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <h1 class="text-center text-primary">Sentiment Analysis Results</h1>
+        {% if message %}
+            <p class="text-danger text-center">{{ message }}</p>
+        {% else %}
+            <div class="card shadow p-4 mb-4">
+                <h2 class="text-center">Translated Reviews</h2>
+                <ul class="list-group">
+                    {% for review in reviews %}
+                        <li class="list-group-item">
+                            <strong>Original ({{ review.language }}):</strong> {{ review.original }}<br>
+                            <strong>Translated:</strong> {{ review.translated }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card shadow p-4">
+                        <h2 class="text-center">Sentiment Distribution</h2>
+                        <canvas id="sentimentChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow p-4">
+                        <h2 class="text-center">Emotion Analysis</h2>
+                        <canvas id="emotionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow p-4 mt-4">
+                <h2 class="text-center">Aspect-Based Sentiment Analysis</h2>
+                <ul class="list-group">
+                    {% for aspect, sentiment in aspect_sentiments.items() %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>{{ aspect }}</span>
+                            <span class="badge 
+                                {% if sentiment == 'Positive' %}bg-success 
+                                {% elif sentiment == 'Negative' %}bg-danger 
+                                {% else %}bg-secondary{% endif %}">
+                                {{ sentiment }}
+                            </span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Chatbot Toggle Button -->
+    <button id="chatbot-toggle" class="chatbot-icon">💬</button>
+
+    <!-- Chatbot UI -->
+    <div id="chatbot-container" class="chatbot hidden">
+        <h3>AI Chatbot</h3>
+        <div id="chatbox" class="chatbox"></div>
+        <input type="text" id="userInput" placeholder="Ask me anything about the reviews...">
+        <button id="sendBtn">Send</button>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const socket = io.connect("http://127.0.0.1:5000");
+
+        const chatbox = document.getElementById("chatbox");
+        const input = document.getElementById("userInput");
+
+        function scrollToBottom() {
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+        document.getElementById("sendBtn").addEventListener("click", sendMessage);
+        document.getElementById("chatbot-toggle").addEventListener("click", () => {
+            document.getElementById("chatbot-container").classList.toggle("hidden");
+        });
+
+        function sendMessage() {
+            const message = input.value.trim();
+            if (message === "") return;
+
+            chatbox.innerHTML += `<p><strong>You:</strong> ${message}</p>`;
+            chatbox.innerHTML += `<p><em>Bot is typing...</em></p>`;
+            scrollToBottom();
+
+            socket.emit("message", {
+                message: message,
+                product_id: "{{ product_id }}"
+            });
+
+            input.value = "";
+        }
+
+        socket.on("response", function(data) {
+            // Remove loading message
+            const loading = chatbox.querySelector("em");
+            if (loading) loading.parentNode.removeChild(loading);
+
+            chatbox.innerHTML += `<p><strong>Bot:</strong> ${data.message}</p>`;
+            scrollToBottom();
+        });
+
+        // Chart Rendering
+        const sentimentData = {
+            labels: ["Positive", "Neutral", "Negative"],
+            datasets: [{
+                data: [{% for sentiment, count in sentiment_scores.items() %}{{ count }},{% endfor %}],
+                backgroundColor: ["#28a745", "#ffc107", "#dc3545"]
+            }]
+        };
+
+        const emotionData = {
+            labels: [{% for emotion in emotions.keys() %}"{{ emotion }}",{% endfor %}],
+            datasets: [{
+                data: [{% for emotion in emotions.values() %}{{ emotion }},{% endfor %}],
+                backgroundColor: ["#007bff", "#ff6384", "#36a2eb", "#ffcd56", "#4bc0c0", "#9966ff"]
+            }]
+        };
+
+        new Chart(document.getElementById("sentimentChart").getContext("2d"), {
+            type: "pie",
+            data: sentimentData
+        });
+
+        new Chart(document.getElementById("emotionChart").getContext("2d"), {
+            type: "doughnut",
+            data: emotionData
+        });
+    </script>
+
+    <!-- Chatbot Styling -->
+    <style>
+        .chatbot-icon {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        .chatbot {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 320px;
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+            z-index: 999;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .chatbox {
+            height: 220px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 10px;
+            padding: 5px;
+            font-size: 14px;
+        }
+
+        input[type="text"] {
+            width: 70%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        #sendBtn {
+            width: 25%;
+            padding: 5px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #sendBtn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</body>
+</html>
