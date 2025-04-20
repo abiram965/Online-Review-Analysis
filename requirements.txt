@@ -1,4 +1,6 @@
 Flask==2.2.3
+torch>=2.0.0
+tensorflow>=2.11.0
 flask-socketio==5.2.0
 pandas==1.5.3
 transformers==4.28.0
