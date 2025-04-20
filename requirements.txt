@@ -1,0 +1,15 @@
+Flask
+pandas
+transformers
+matplotlib
+spacy
+textblob
+langdetect
+deep-translator
+requests
+flask-socketio
+eventlet
+torch
+
+
+
