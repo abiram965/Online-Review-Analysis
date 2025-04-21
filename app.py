@@ -17,7 +17,7 @@ socketio = SocketIO(app, async_mode="gevent")
 
 # Load data and models
 df = pd.read_csv("flipkart.csv")
-sentiment_model = pipeline("sentiment-analysis", model="nlptown/bert-base-multilingual-uncased-sentiment")
+sentiment_model = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
 emotion_model = pipeline("text-classification", model="bhadresh-savani/distilbert-base-uncased-emotion")
 nlp = spacy.load("en_core_web_sm")
 
@@ -128,4 +128,5 @@ def analyze():
                            chart_path=chart_path, product_id=product_id)
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    socketio.run(app, host="0.0.0.0", port=port)
