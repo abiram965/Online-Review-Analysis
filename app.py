@@ -13,13 +13,12 @@ import google.generativeai as genai
 import dotenv
 
 app = Flask(__name__)
-socketio = SocketIO(app, async_mode="threading")
+socketio = SocketIO(app, async_mode="eventlet")
 
 # Load data and models
 df = pd.read_csv("flipkart.csv")
-sentiment_model = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english", framework="pt")
-emotion_model = pipeline("text-classification", model="bhadresh-savani/distilbert-base-uncased-emotion", framework="pt")
-
+sentiment_model = pipeline("sentiment-analysis", model="nlptown/bert-base-multilingual-uncased-sentiment")
+emotion_model = pipeline("text-classification", model="bhadresh-savani/distilbert-base-uncased-emotion")
 nlp = spacy.load("en_core_web_sm")
 
 # Google Gemini config
@@ -129,5 +128,4 @@ def analyze():
                            chart_path=chart_path, product_id=product_id)
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    socketio.run(app, host="0.0.0.0", port=port)
+    socketio.run(app, debug=True)
