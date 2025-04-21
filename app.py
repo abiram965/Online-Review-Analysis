@@ -13,7 +13,7 @@ import google.generativeai as genai
 import dotenv
 
 app = Flask(__name__)
-socketio = SocketIO(app, async_mode="gevent")
+socketio = SocketIO(app, async_mode="threading")
 
 # Load data and models
 df = pd.read_csv("flipkart.csv")
