@@ -17,8 +17,9 @@ socketio = SocketIO(app, async_mode="gevent")
 
 # Load data and models
 df = pd.read_csv("flipkart.csv")
-sentiment_model = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
-emotion_model = pipeline("text-classification", model="bhadresh-savani/distilbert-base-uncased-emotion")
+sentiment_model = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english", framework="pt")
+emotion_model = pipeline("text-classification", model="bhadresh-savani/distilbert-base-uncased-emotion", framework="pt")
+
 nlp = spacy.load("en_core_web_sm")
 
 # Google Gemini config
