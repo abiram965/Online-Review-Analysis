@@ -1,24 +1,577 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Product Sentiment Analysis</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analyzer Pro</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #4cc9a4;
+            --warning-color: #f9c74f;
+            --danger-color: #f94144;
+        }
+        
+        body.dark-mode {
+            --light-color: #212529;
+            --dark-color: #f8f9fa;
+            background-color: #121212;
+            color: #f8f9fa;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        
+        .dash-card {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            height: 100%;
+        }
+        
+        .dash-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            padding: 15px 20px;
+        }
+        
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+        
+        .stats-card {
+            text-align: center;
+            padding: 1.5rem;
+        }
+        
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .stats-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .theme-switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .product-select-card {
+            padding: 2rem;
+        }
+        
+        .btn-analyze {
+            background-color: var(--accent-color);
+            border: none;
+            padding: 0.7rem 1.5rem;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-analyze:hover {
+            background-color: var(--primary-color);
+        }
+        
+        .dashboard-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+        
+        .dark-mode .dash-card {
+            background-color: #2d2d2d;
+            color: #f8f9fa;
+        }
+        
+        .dark-mode .stats-number {
+            color: var(--accent-color);
+        }
+        
+        .dark-mode .stats-label {
+            color: #adb5bd;
+        }
+        
+        .feature-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--warning-color);
+            color: var(--dark-color);
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        
+        .feature-description {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 1rem;
+        }
+        
+        .dark-mode .feature-description {
+            color: #adb5bd;
+        }
+        
+        .animation-fadeIn {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
 </head>
-<body class="bg-light">
-    <div class="container mt-5">
-        <h1 class="text-center text-primary">E-Commerce Sentiment Analysis</h1>
-        <div class="card shadow p-4">
-            <form action="/analyze" method="post">
-                <label class="form-label">Select a Product:</label>
-                <select name="product_id" class="form-select">
-                    {% for product in products %}
-                        <option value="{{ product['ID'] }}">{{ product['Product_name'] }}</option>
-                    {% endfor %}
-                </select>
-                <button type="submit" class="btn btn-primary mt-3 w-100">Analyze</button>
-            </form>
+<body class="animation-fadeIn">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: var(--primary-color);">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-bar me-2"></i>Sentiment Analyzer Pro
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Analytics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Reports</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <span class="text-light me-2">
+                        <i id="theme-icon" class="fas fa-sun"></i>
+                    </span>
+                    <label class="theme-switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="dashboard-title">E-Commerce Sentiment Dashboard</h1>
+        
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="dash-card stats-card">
+                    <i class="fas fa-shopping-bag card-icon"></i>
+                    <div class="stats-number">{{ products|length }}</div>
+                    <div class="stats-label">Total Products</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dash-card stats-card">
+                    <i class="fas fa-comment card-icon"></i>
+                    <div class="stats-number">{{ total_reviews }}</div>
+                    <div class="stats-label">Total Reviews</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dash-card stats-card">
+                    <i class="fas fa-language card-icon"></i>
+                    <div class="stats-number">{{ total_languages }}</div>
+                    <div class="stats-label">Languages Detected</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dash-card stats-card">
+                    <i class="fas fa-smile card-icon"></i>
+                    <div class="stats-number">{{ positive_percentage }}%</div>
+                    <div class="stats-label">Average Positive Rate</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="dash-card product-select-card">
+                    <h4 class="mb-3">Select a Product for Analysis</h4>
+                    <form action="/analyze" method="post" id="analyze-form">
+                        <div class="mb-3">
+                            <label class="form-label">Choose Product:</label>
+                            <select name="product_id" class="form-select" id="product-select">
+                                <option value="">-- Select a product --</option>
+                                {% for product in products %}
+                                    <option value="{{ product['ID'] }}">{{ product['Product_name'] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Analysis Type:</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="analysis_types" value="sentiment" id="sentiment-check" checked>
+                                <label class="form-check-label" for="sentiment-check">
+                                    Sentiment Analysis
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="analysis_types" value="emotion" id="emotion-check" checked>
+                                <label class="form-check-label" for="emotion-check">
+                                    Emotion Detection
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="analysis_types" value="aspect" id="aspect-check" checked>
+                                <label class="form-check-label" for="aspect-check">
+                                    Aspect-Based Analysis
+                                </label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-analyze">
+                            <i class="fas fa-chart-line me-2"></i>Analyze Product
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="dash-card">
+                    <div class="card-header">
+                        Recent Analysis Overview
+                    </div>
+                    <div class="card-body p-0">
+                        <canvas id="overviewChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <h2 class="dashboard-title">Advanced Features</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="dash-card position-relative">
+                    <span class="feature-badge">NEW</span>
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-brain card-icon"></i>
+                        <h4>AI-Powered Insights</h4>
+                        <p class="feature-description">
+                            Leverage advanced AI models to extract deeper insights from customer reviews and identify emerging patterns.
+                        </p>
+                        <button class="btn btn-outline-primary mt-2" id="ai-insights-btn">
+                            Try AI Insights
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="dash-card position-relative">
+                    <span class="feature-badge">NEW</span>
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-project-diagram card-icon"></i>
+                        <h4>Competitor Analysis</h4>
+                        <p class="feature-description">
+                            Compare sentiment across different products and identify competitive advantages and improvement areas.
+                        </p>
+                        <button class="btn btn-outline-primary mt-2">
+                            Compare Products
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="dash-card position-relative">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-globe card-icon"></i>
+                        <h4>Multilingual Analysis</h4>
+                        <p class="feature-description">
+                            Automatically detect and analyze reviews in multiple languages with accurate translations and sentiment detection.
+                        </p>
+                        <button class="btn btn-outline-primary mt-2">
+                            Explore Languages
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- AI Insights Modal -->
+    <div class="modal fade" id="aiInsightsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">AI-Powered Insights</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Select Product for AI Analysis:</label>
+                        <select class="form-select" id="ai-product-select">
+                            <option value="">-- Select a product --</option>
+                            {% for product in products %}
+                                <option value="{{ product['ID'] }}">{{ product['Product_name'] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Choose AI Analysis Type:</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="ai_analysis" value="trends" id="trends-radio" checked>
+                            <label class="form-check-label" for="trends-radio">
+                                Trending Topics & Keywords
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="ai_analysis" value="summary" id="summary-radio">
+                            <label class="form-check-label" for="summary-radio">
+                                Smart Summary Generation
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="ai_analysis" value="improvements" id="improvements-radio">
+                            <label class="form-check-label" for="improvements-radio">
+                                Product Improvement Suggestions
+                            </label>
+                        </div>
+                    </div>
+                    <div id="ai-result-container" class="border rounded p-3 bg-light d-none">
+                        <div class="d-flex justify-content-center mb-3" id="ai-loading">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <div id="ai-result-content"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="run-ai-analysis">Run AI Analysis</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        
+        themeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                document.body.classList.add('dark-mode');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+        
+        // Check for saved theme preference
+        if (localStorage.getItem('theme') === 'dark') {
+            themeToggle.checked = true;
+            document.body.classList.add('dark-mode');
+            themeIcon.classList.remove('fa-sun');
+            themeIcon.classList.add('fa-moon');
+        }
+        
+        // Overview Chart
+        const ctx = document.getElementById('overviewChart').getContext('2d');
+        const overviewChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Positive', 'Neutral', 'Negative'],
+                datasets: [{
+                    label: 'Recent Sentiment Distribution',
+                    data: [65, 20, 15],
+                    backgroundColor: [
+                        'rgba(76, 201, 164, 0.6)',
+                        'rgba(249, 199, 79, 0.6)',
+                        'rgba(249, 65, 68, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(76, 201, 164, 1)',
+                        'rgba(249, 199, 79, 1)',
+                        'rgba(249, 65, 68, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // AI Insights Modal
+        const aiInsightsBtn = document.getElementById('ai-insights-btn');
+        const aiInsightsModal = new bootstrap.Modal(document.getElementById('aiInsightsModal'));
+        
+        aiInsightsBtn.addEventListener('click', function() {
+            aiInsightsModal.show();
+        });
+        
+        // Run AI Analysis Button
+        const runAiAnalysisBtn = document.getElementById('run-ai-analysis');
+        const aiResultContainer = document.getElementById('ai-result-container');
+        const aiLoading = document.getElementById('ai-loading');
+        const aiResultContent = document.getElementById('ai-result-content');
+        
+        runAiAnalysisBtn.addEventListener('click', function() {
+            const productId = document.getElementById('ai-product-select').value;
+            const analysisType = document.querySelector('input[name="ai_analysis"]:checked').value;
+            
+            if (!productId) {
+                alert('Please select a product for analysis');
+                return;
+            }
+            
+            // Show loading and result container
+            aiResultContainer.classList.remove('d-none');
+            aiLoading.classList.remove('d-none');
+            aiResultContent.innerHTML = '';
+            
+            // Simulate AI analysis (replace with actual API call)
+            setTimeout(() => {
+                aiLoading.classList.add('d-none');
+                
+                if (analysisType === 'trends') {
+                    aiResultContent.innerHTML = `
+                        <h5>Trending Topics & Keywords</h5>
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <span class="badge bg-primary p-2">quality (27 mentions)</span>
+                            <span class="badge bg-primary p-2">durability (18 mentions)</span>
+                            <span class="badge bg-primary p-2">price (15 mentions)</span>
+                            <span class="badge bg-primary p-2">delivery (12 mentions)</span>
+                            <span class="badge bg-primary p-2">customer service (10 mentions)</span>
+                            <span class="badge bg-primary p-2">packaging (8 mentions)</span>
+                        </div>
+                        <h6>Emerging Topics (Last 30 days)</h6>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-success" style="width: 65%">Battery life (+65%)</div>
+                        </div>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-success" style="width: 40%">Ease of use (+40%)</div>
+                        </div>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-danger" style="width: 25%">App connectivity (-25%)</div>
+                        </div>
+                    `;
+                } else if (analysisType === 'summary') {
+                    aiResultContent.innerHTML = `
+                        <h5>Smart Summary</h5>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <p>This product receives primarily positive feedback (72% positive sentiment) with customers particularly praising its quality, durability, and value for money. Key strengths mentioned include easy setup, responsive customer service, and reliable performance.</p>
+                                <p>Areas for improvement center around the mobile app connectivity issues reported by 18% of reviewers and occasional delivery delays mentioned by 12% of customers. The product appeals most strongly to the 25-34 age demographic.</p>
+                            </div>
+                        </div>
+                        <h6>Key Customer Quotes</h6>
+                        <blockquote class="blockquote">
+                            <p class="small">"Absolutely love this product! The quality is exceptional and it's been working flawlessly for months."</p>
+                        </blockquote>
+                        <blockquote class="blockquote">
+                            <p class="small">"Great value for money, but the app needs serious improvement. Connection drops frequently."</p>
+                        </blockquote>
+                    `;
+                } else if (analysisType === 'improvements') {
+                    aiResultContent.innerHTML = `
+                        <h5>Product Improvement Suggestions</h5>
+                        <div class="alert alert-warning">
+                            <strong>Priority 1:</strong> Improve mobile app stability and connectivity
+                            <div class="small text-muted">Mentioned in 27 reviews (18% of negative feedback)</div>
+                        </div>
+                        <div class="alert alert-warning">
+                            <strong>Priority 2:</strong> Enhance packaging for better protection during shipping
+                            <div class="small text-muted">Mentioned in 15 reviews (10% of negative feedback)</div>
+                        </div>
+                        <div class="alert alert-warning">
+                            <strong>Priority 3:</strong> Add more color options to the product line
+                            <div class="small text-muted">Suggested in 12 reviews as potential improvement</div>
+                        </div>
+                        <h6>Competitor Comparison</h6>
+                        <p>Our product outperforms competitors in durability and price, but lags in app experience and color variety.</p>
+                    `;
+                }
+            }, 1500);
+        });
+    </script>
 </body>
 </html>

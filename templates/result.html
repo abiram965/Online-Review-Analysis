@@ -1,206 +1,851 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Review Analysis</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results - Sentiment Analyzer Pro</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #4cc9a4;
+            --warning-color: #f9c74f;
+            --danger-color: #f94144;
+        }
+        
+        body.dark-mode {
+            --light-color: #212529;
+            --dark-color: #f8f9fa;
+            background-color: #121212;
+            color: #f8f9fa;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        
+        .dash-card {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            height: 100%;
+            margin-bottom: 20px;
+        }
+        
+        .dash-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            padding: 15px 20px;
+        }
+        
+        .card-icon {
+            font-size: 2rem;
+            color: var(--accent-color);
+            margin-right: 10px;
+        }
+        
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .theme-switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .result-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+        
+        .dark-mode .dash-card {
+            background-color: #2d2d2d;
+            color: #f8f9fa;
+        }
+        
+        .animation-fadeIn {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .badge-sentiment {
+            font-size: 0.85rem;
+            padding: 5px 10px;
+        }
+        
+        .badge-positive {
+            background-color: var(--success-color);
+        }
+        
+        .badge-neutral {
+            background-color: var(--warning-color);
+        }
+        
+        .badge-negative {
+            background-color: var(--danger-color);
+        }
+        
+        .review-card {
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--accent-color);
+            background-color: rgba(67, 97, 238, 0.05);
+            transition: transform 0.2s;
+        }
+        
+        .review-card:hover {
+            transform: translateX(5px);
+        }
+        
+        .review-original {
+            font-style: italic;
+            color: #6c757d;
+        }
+        
+        .dark-mode .review-original {
+            color: #adb5bd;
+        }
+        
+        .aspect-badge {
+            font-size: 0.8rem;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            display: inline-block;
+        }
+        
+        .aspect-positive {
+            background-color: rgba(76, 201, 164, 0.2);
+            color: #2a9d8f;
+            border: 1px solid #2a9d8f;
+        }
+        
+        .aspect-negative {
+            background-color: rgba(249, 65, 68, 0.2);
+            color: #e76f51;
+            border: 1px solid #e76f51;
+        }
+        
+        .aspect-neutral {
+            background-color: rgba(249, 199, 79, 0.2);
+            color: #e9c46a;
+            border: 1px solid #e9c46a;
+        }
+        
+        .dark-mode .aspect-positive {
+            background-color: rgba(76, 201, 164, 0.3);
+            color: #90e0d0;
+        }
+        
+        .dark-mode .aspect-negative {
+            background-color: rgba(249, 65, 68, 0.3);
+            color: #f4a098;
+        }
+        
+        .dark-mode .aspect-neutral {
+            background-color: rgba(249, 199, 79, 0.3);
+            color: #ffe0a0;
+        }
+        
+        .emotion-badge {
+            border-radius: 20px;
+            padding: 5px 12px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            display: inline-block;
+            font-size: 0.85rem;
+        }
+        
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+        
+        .dark-mode .chat-container {
+            background-color: #343a40;
+            border-color: #495057;
+        }
+        
+        .chat-message {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            max-width: 80%;
+        }
+        
+        .user-message {
+            background-color: #e9ecef;
+            color: #212529;
+            margin-left: auto;
+            border-bottom-right-radius: 0;
+        }
+        
+        .bot-message {
+            background-color: var(--primary-color);
+            color: white;
+            margin-right: auto;
+            border-bottom-left-radius: 0;
+        }
+        
+        .dark-mode .user-message {
+            background-color: #495057;
+            color: #f8f9fa;
+        }
+        
+        .suggestion-chip {
+            display: inline-block;
+            background-color: #e9ecef;
+            border-radius: 16px;
+            padding: 5px 12px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .suggestion-chip:hover {
+            background-color: #dee2e6;
+        }
+        
+        .dark-mode .suggestion-chip {
+            background-color: #495057;
+            color: #f8f9fa;
+        }
+        
+        .dark-mode .suggestion-chip:hover {
+            background-color: #6c757d;
+        }
+        
+        .export-dropdown .dropdown-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .export-dropdown .dropdown-item i {
+            margin-right: 8px;
+            width: 20px;
+            text-align: center;
+        }
+    </style>
 </head>
-<body class="bg-light">
-    <div class="container mt-5">
-        <h1 class="text-center text-primary">Sentiment Analysis Results</h1>
+<body class="animation-fadeIn">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: var(--primary-color);">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-chart-bar me-2"></i>Sentiment Analyzer Pro
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Analysis Results</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Reports</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <span class="text-light me-2">
+                        <i id="theme-icon" class="fas fa-sun"></i>
+                    </span>
+                    <label class="theme-switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
         {% if message %}
-            <p class="text-danger text-center">{{ message }}</p>
+            <div class="alert alert-warning">{{ message }}</div>
         {% else %}
-            <div class="card shadow p-4 mb-4">
-                <h2 class="text-center">Translated Reviews</h2>
-                <ul class="list-group">
-                    {% for review in reviews %}
-                        <li class="list-group-item">
-                            <strong>Original ({{ review.language }}):</strong> {{ review.original }}<br>
-                            <strong>Translated:</strong> {{ review.translated }}
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card shadow p-4">
-                        <h2 class="text-center">Sentiment Distribution</h2>
-                        <canvas id="sentimentChart"></canvas>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow p-4">
-                        <h2 class="text-center">Emotion Analysis</h2>
-                        <canvas id="emotionChart"></canvas>
-                    </div>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="result-title">Analysis Results</h1>
+                <div class="dropdown export-dropdown">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-download me-2"></i>Export Results
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                        <li><a class="dropdown-item" href="#"><i class="far fa-file-pdf"></i>Export as PDF</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="far fa-file-excel"></i>Export as Excel</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="far fa-file-csv"></i>Export as CSV</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-chart-line"></i>Create Dashboard</a></li>
+                    </ul>
                 </div>
             </div>
 
-            <div class="card shadow p-4 mt-4">
-                <h2 class="text-center">Aspect-Based Sentiment Analysis</h2>
-                <ul class="list-group">
-                    {% for aspect, sentiment in aspect_sentiments.items() %}
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>{{ aspect }}</span>
-                            <span class="badge 
-                                {% if sentiment == 'Positive' %}bg-success 
-                                {% elif sentiment == 'Negative' %}bg-danger 
-                                {% else %}bg-secondary{% endif %}">
-                                {{ sentiment }}
-                            </span>
-                        </li>
-                    {% endfor %}
-                </ul>
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="dash-card">
+                        <div class="card-header">
+                            <i class="fas fa-smile card-icon"></i>Sentiment Analysis
+                        </div>
+                        <div class="card-body text-center">
+                            <img src="{{ chart_path }}" alt="Sentiment Chart" class="img-fluid mb-3">
+                            <div class="row">
+                                <div class="col-4">
+                                    <h4 class="text-success">{{ sentiment_scores.Positive }}</h4>
+                                    <p class="mb-0">Positive</p>
+                                </div>
+                                <div class="col-4">
+                                    <h4 class="text-warning">{{ sentiment_scores.Neutral }}</h4>
+                                    <p class="mb-0">Neutral</p>
+                                </div>
+                                <div class="col-4">
+                                    <h4 class="text-danger">{{ sentiment_scores.Negative }}</h4>
+                                    <p class="mb-0">Negative</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dash-card">
+                        <div class="card-header">
+                            <i class="fas fa-heart card-icon"></i>Emotion Analysis
+                        </div>
+                        <div class="card-body">
+                            <canvas id="emotionChart" height="200"></canvas>
+                            <div class="mt-3">
+                                {% for emotion, count in emotions.items() %}
+                                    <span class="emotion-badge" style="background-color: {{ emotion_colors[loop.index0] }}">
+                                        {{ emotion }}: {{ count }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dash-card">
+                        <div class="card-header">
+                            <i class="fas fa-tags card-icon"></i>Aspect Analysis
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">Top Aspects</h5>
+                            <div class="aspect-badges">
+                                {% for aspect, sentiment in aspect_sentiments.items() %}
+                                    <span class="badge aspect-badge 
+                                        {% if sentiment == 'Positive' %}aspect-positive
+                                        {% elif sentiment == 'Negative' %}aspect-negative
+                                        {% else %}aspect-neutral{% endif %}">
+                                        {{ aspect }}: {{ sentiment }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                            <div class="mt-3">
+                                <canvas id="aspectChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="dash-card">
+                        <div class="card-header">
+                            <i class="fas fa-comment-alt card-icon"></i>Reviews
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="Search reviews..." id="review-search">
+                                    <button class="btn btn-outline-primary" type="button">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="reviews-container">
+                                {% for review in reviews %}
+                                <div class="card review-card p-3 mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <h6>Review #{{ loop.index }}</h6>
+                                        <span class="badge badge-sentiment
+                                            {% if 'Positive' in review.sentiment %}badge-positive
+                                            {% elif 'Negative' in review.sentiment %}badge-negative
+                                            {% else %}badge-neutral{% endif %}">
+                                            {{ review.sentiment }}
+                                        </span>
+                                    </div>
+                                    {% if review.language != "en" %}
+                                    <p class="review-original">Original ({{ review.language }}): {{ review.original }}</p>
+                                    {% endif %}
+                                    <p>{{ review.translated }}</p>
+                                    <div class="aspects mt-2">
+                                        {% for aspect in review.aspects %}
+                                        <span class="badge aspect-badge 
+                                            {% if aspect.sentiment == 'Positive' %}aspect-positive
+                                            {% elif aspect.sentiment == 'Negative' %}aspect-negative
+                                            {% else %}aspect-neutral{% endif %}">
+                                            {{ aspect.name }}: {{ aspect.sentiment }}
+                                        </span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="d-flex justify-content-center">
+                                <nav aria-label="Reviews pagination">
+                                    <ul class="pagination">
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                                        </li>
+                                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="#">Next</a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dash-card">
+                        <div class="card-header">
+                            <i class="fas fa-robot card-icon"></i>AI Assistant
+                        </div>
+                        <div class="card-body">
+                            <div class="chat-container" id="chat-container">
+                                <div class="bot-message chat-message">
+                                    Hello! I can help you understand the sentiment analysis of this product. What would you like to know?
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="mb-2">
+                                    <span class="suggestion-chip" onclick="sendSuggestion(this)">What are the main issues?</span>
+                                    <span class="suggestion-chip" onclick="sendSuggestion(this)">Summarize positive feedback</span>
+                                    <span class="suggestion-chip" onclick="sendSuggestion(this)">Compare with competitors</span>
+                                </div>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="Ask about these results..." id="chat-input">
+                                    <button class="btn btn-primary" type="button" id="send-button">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dash-card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-lightbulb card-icon"></i>Key Insights
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">Positive Highlights</h5>
+                                    <p class="card-text">The most appreciated aspects of this product are:</p>
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Quality
+                                            <span class="badge bg-success rounded-pill">85%</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Value for Money
+                                            <span class="badge bg-success rounded-pill">78%</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Design
+                                            <span class="badge bg-success rounded-pill">70%</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">Areas for Improvement</h5>
+                                    <p class="card-text">The following aspects need attention:</p>
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Customer Service
+                                            <span class="badge bg-danger rounded-pill">45%</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Durability
+                                            <span class="badge bg-danger rounded-pill">38%</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Packaging
+                                            <span class="badge bg-danger rounded-pill">25%</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">Recommendations</h5>
+                                    <p class="card-text">Based on sentiment analysis:</p>
+                                    <ol class="list-group list-group-numbered">
+                                        <li class="list-group-item">Improve customer service response time</li>
+                                        <li class="list-group-item">Enhance product durability with better materials</li>
+                                        <li class="list-group-item">Redesign packaging for better protection</li>
+                                        <li class="list-group-item">Emphasize quality and value in marketing</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mb-4">
+                <a href="/" class="btn btn-outline-primary me-2"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+                <a href="#" class="btn btn-primary me-2"><i class="fas fa-file-export me-2"></i>Export Full Report</a>
+                <a href="#" class="btn btn-success"><i class="fas fa-share-alt me-2"></i>Share Results</a>
             </div>
         {% endif %}
     </div>
 
-    <!-- Chatbot Toggle Button -->
-    <button id="chatbot-toggle" class="chatbot-icon">💬</button>
-
-    <!-- Chatbot UI -->
-    <div id="chatbot-container" class="chatbot hidden">
-        <h3>AI Chatbot</h3>
-        <div id="chatbox" class="chatbox"></div>
-        <input type="text" id="userInput" placeholder="Ask me anything about the reviews...">
-        <button id="sendBtn">Send</button>
-    </div>
-
-    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const socket = io.connect("http://127.0.0.1:5000");
-
-        const chatbox = document.getElementById("chatbox");
-        const input = document.getElementById("userInput");
-
-        function scrollToBottom() {
-            chatbox.scrollTop = chatbox.scrollHeight;
-        }
-
-        document.getElementById("sendBtn").addEventListener("click", sendMessage);
-        document.getElementById("chatbot-toggle").addEventListener("click", () => {
-            document.getElementById("chatbot-container").classList.toggle("hidden");
+        // Theme Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        
+        themeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                document.body.classList.add('dark-mode');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'light');
+            }
         });
-
+        
+        // Check for saved theme preference
+        if (localStorage.getItem('theme') === 'dark') {
+            themeToggle.checked = true;
+            document.body.classList.add('dark-mode');
+            themeIcon.classList.remove('fa-sun');
+            themeIcon.classList.add('fa-moon');
+        }
+        
+        // Initialize emotion chart
+        {% if emotions %}
+        const emotionCtx = document.getElementById('emotionChart').getContext('2d');
+        const emotionLabels = [{% for emotion in emotions.keys() %}'{{ emotion }}',{% endfor %}];
+        const emotionData = [{% for count in emotions.values() %}{{ count }},{% endfor %}];
+        const emotionColors = [
+            'rgba(255, 99, 132, 0.7)',
+            'rgba(54, 162, 235, 0.7)',
+            'rgba(255, 206, 86, 0.7)',
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(153, 102, 255, 0.7)',
+            'rgba(255, 159, 64, 0.7)'
+        ];
+        
+        new Chart(emotionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: emotionLabels,
+                datasets: [{
+                    data: emotionData,
+                    backgroundColor: emotionColors,
+                    borderColor: emotionColors.map(color => color.replace('0.7', '1')),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+        {% endif %}
+        
+        // Initialize aspect chart
+        {% if aspect_sentiments %}
+        const aspectCtx = document.getElementById('aspectChart').getContext('2d');
+        const aspectLabels = [];
+        const positiveAspects = [];
+        const negativeAspects = [];
+        const neutralAspects = [];
+        
+        {% for aspect, sentiment in aspect_sentiments.items() %}
+        aspectLabels.push('{{ aspect }}');
+        if ('{{ sentiment }}' === 'Positive') {
+            positiveAspects.push(1);
+            negativeAspects.push(0);
+            neutralAspects.push(0);
+        } else if ('{{ sentiment }}' === 'Negative') {
+            positiveAspects.push(0);
+            negativeAspects.push(1);
+            neutralAspects.push(0);
+        } else {
+            positiveAspects.push(0);
+            negativeAspects.push(0);
+            neutralAspects.push(1);
+        }
+        {% endfor %}
+        
+        new Chart(aspectCtx, {
+            type: 'bar',
+            data: {
+                labels: aspectLabels,
+                datasets: [
+                    {
+                        label: 'Positive',
+                        data: positiveAspects,
+                        backgroundColor: 'rgba(76, 201, 164, 0.7)',
+                        borderColor: 'rgba(76, 201, 164, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Negative',
+                        data: negativeAspects,
+                        backgroundColor: 'rgba(249, 65, 68, 0.7)',
+                        borderColor: 'rgba(249, 65, 68, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Neutral',
+                        data: neutralAspects,
+                        backgroundColor: 'rgba(249, 199, 79, 0.7)',
+                        borderColor: 'rgba(249, 199, 79, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        stacked: true
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        {% endif %}
+        
+        // Socket.io chat functionality
+        const socket = io();
+        const chatContainer = document.getElementById('chat-container');
+        const chatInput = document.getElementById('chat-input');
+        const sendButton = document.getElementById('send-button');
+        
         function sendMessage() {
-            const message = input.value.trim();
-            if (message === "") return;
-
-            chatbox.innerHTML += `<p><strong>You:</strong> ${message}</p>`;
-            chatbox.innerHTML += `<p><em>Bot is typing...</em></p>`;
-            scrollToBottom();
-
-            socket.emit("message", {
-                message: message,
-                product_id: "{{ product_id }}"
-            });
-
-            input.value = "";
+            const message = chatInput.value.trim();
+            if (message) {
+                // Add user message to chat
+                const userMessageDiv = document.createElement('div');
+                userMessageDiv.className = 'user-message chat-message';
+                userMessageDiv.textContent = message;
+                chatContainer.appendChild(userMessageDiv);
+                
+                // Scroll to bottom
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                // Send message to server
+                socket.emit('message', { 
+                    message: message,
+                    product_id: '{{ product_id }}'
+                });
+                
+                // Clear input
+                chatInput.value = '';
+            }
         }
-
-        socket.on("response", function(data) {
-            // Remove loading message
-            const loading = chatbox.querySelector("em");
-            if (loading) loading.parentNode.removeChild(loading);
-
-            chatbox.innerHTML += `<p><strong>Bot:</strong> ${data.message}</p>`;
-            scrollToBottom();
+        
+        function sendSuggestion(element) {
+            chatInput.value = element.textContent;
+            sendMessage();
+        }
+        
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
         });
-
-        // Chart Rendering
-        const sentimentData = {
-            labels: ["Positive", "Neutral", "Negative"],
-            datasets: [{
-                data: [{% for sentiment, count in sentiment_scores.items() %}{{ count }},{% endfor %}],
-                backgroundColor: ["#28a745", "#ffc107", "#dc3545"]
-            }]
-        };
-
-        const emotionData = {
-            labels: [{% for emotion in emotions.keys() %}"{{ emotion }}",{% endfor %}],
-            datasets: [{
-                data: [{% for emotion in emotions.values() %}{{ emotion }},{% endfor %}],
-                backgroundColor: ["#007bff", "#ff6384", "#36a2eb", "#ffcd56", "#4bc0c0", "#9966ff"]
-            }]
-        };
-
-        new Chart(document.getElementById("sentimentChart").getContext("2d"), {
-            type: "pie",
-            data: sentimentData
+        
+        // Handle incoming messages
+        socket.on('response', function(data) {
+            const botMessageDiv = document.createElement('div');
+            botMessageDiv.className = 'bot-message chat-message';
+            botMessageDiv.textContent = data.message;
+            chatContainer.appendChild(botMessageDiv);
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         });
-
-        new Chart(document.getElementById("emotionChart").getContext("2d"), {
-            type: "doughnut",
-            data: emotionData
+        
+        // Search functionality for reviews
+        const reviewSearch = document.getElementById('review-search');
+        reviewSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const reviewCards = document.querySelectorAll('.review-card');
+            
+            reviewCards.forEach(card => {
+                const reviewText = card.textContent.toLowerCase();
+                if (reviewText.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+        
+        // Initialize temporary review data for demonstration
+        document.addEventListener('DOMContentLoaded', function() {
+            // Format the existing reviews with required properties
+            const reviewsContainer = document.querySelector('.reviews-container');
+            if (reviewsContainer) {
+                const reviewCards = reviewsContainer.querySelectorAll('.review-card');
+                
+                if (reviewCards.length === 0) {
+                    // If backend didn't provide reviews, add sample reviews for demonstration
+                    const sampleReviews = [
+                        {% for review in reviews %}
+                        {
+                            original: "{{ review.original }}",
+                            translated: "{{ review.translated }}",
+                            language: "{{ review.language }}",
+                            sentiment: "{{ 'Positive' if loop.index % 3 == 0 else 'Negative' if loop.index % 3 == 1 else 'Neutral' }}",
+                            aspects: [
+                                { name: "quality", sentiment: "Positive" },
+                                { name: "price", sentiment: "{{ 'Negative' if loop.index % 2 == 0 else 'Positive' }}" }
+                            ]
+                        },
+                        {% endfor %}
+                    ];
+                    
+                    // Clear container and repopulate with formatted reviews
+                    reviewsContainer.innerHTML = '';
+                    
+                    sampleReviews.forEach((review, index) => {
+                        const reviewCard = document.createElement('div');
+                        reviewCard.className = 'card review-card p-3 mb-3';
+                        
+                        let aspectsHTML = '';
+                        review.aspects.forEach(aspect => {
+                            const sentimentClass = aspect.sentiment === 'Positive' ? 'aspect-positive' : 
+                                                  aspect.sentiment === 'Negative' ? 'aspect-negative' : 'aspect-neutral';
+                            aspectsHTML += `<span class="badge aspect-badge ${sentimentClass}">${aspect.name}: ${aspect.sentiment}</span>`;
+                        });
+                        
+                        let originalHTML = '';
+                        if (review.language !== "en") {
+                            originalHTML = `<p class="review-original">Original (${review.language}): ${review.original}</p>`;
+                        }
+                        
+                        const sentimentClass = review.sentiment === 'Positive' ? 'badge-positive' : 
+                                            review.sentiment === 'Negative' ? 'badge-negative' : 'badge-neutral';
+                        
+                        reviewCard.innerHTML = `
+                            <div class="d-flex justify-content-between">
+                                <h6>Review #${index + 1}</h6>
+                                <span class="badge badge-sentiment ${sentimentClass}">${review.sentiment}</span>
+                            </div>
+                            ${originalHTML}
+                            <p>${review.translated}</p>
+                            <div class="aspects mt-2">
+                                ${aspectsHTML}
+                            </div>
+                        `;
+                        
+                        reviewsContainer.appendChild(reviewCard);
+                    });
+                }
+            }
         });
     </script>
-
-    <!-- Chatbot Styling -->
-    <style>
-        .chatbot-icon {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            font-size: 24px;
-            cursor: pointer;
-            z-index: 1000;
-        }
-
-        .chatbot {
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            width: 320px;
-            background: white;
-            border-radius: 10px;
-            padding: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.15);
-            z-index: 999;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .chatbox {
-            height: 220px;
-            overflow-y: auto;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 10px;
-            padding: 5px;
-            font-size: 14px;
-        }
-
-        input[type="text"] {
-            width: 70%;
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        #sendBtn {
-            width: 25%;
-            padding: 5px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        #sendBtn:hover {
-            background-color: #0056b3;
-        }
-    </style>
 </body>
 </html>
