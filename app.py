@@ -16,6 +16,7 @@ import numpy as np
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode="eventlet")
 
+##checking
 # Load data and models
 df = pd.read_csv("flipkart.csv")
 sentiment_model = pipeline("sentiment-analysis", model="nlptown/bert-base-multilingual-uncased-sentiment")
