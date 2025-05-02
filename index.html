@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analyzer Pro | Analyze Review Sentiment</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #38b000;
+            --warning: #ffaa00;
+            --danger: #d00000;
+            --neutral: #6c757d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f2f5;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .logo i {
+            font-size: 2rem;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        nav a:hover {
+            opacity: 0.8;
+        }
+        
+        .hero {
+            background: white;
+            padding: 3rem 0;
+            text-align: center;
+            margin: 2rem 0;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            color: var(--neutral);
+        }
+        
+        .analyzer {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .analyzer h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+            min-height: 150px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        .button {
+            display: inline-block;
+            background-color: var(--primary);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            text-align: center;
+        }
+        
+        .button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        
+        .button-clear {
+            background-color: var(--neutral);
+        }
+        
+        .results {
+            display: none;
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .results h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .sentiment-score {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .score-value {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .sentiment-label {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .positive {
+            color: var(--success);
+        }
+        
+        .neutral {
+            color: var(--neutral);
+        }
+        
+        .negative {
+            color: var(--danger);
+        }
+        
+        .meter {
+            height: 30px;
+            background-color: #eee;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
+        .meter-fill {
+            height: 100%;
+            border-radius: 15px;
+            transition: width 1s ease-out;
+        }
+        
+        .breakdown {
+            display: flex;
+            justify-content: space-between;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .breakdown-item {
+            flex: 1;
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .breakdown-item h3 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+        
+        .percentage {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .key-phrases {
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+        }
+        
+        .key-phrases h3 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+            text-align: center;
+        }
+        
+        .phrase-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+        
+        .phrase {
+            background-color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            font-size: 0.9rem;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .feature {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .feature:hover {
+            transform: translateY(-10px);
+        }
+        
+        .feature i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+        
+        .feature h3 {
+            margin-bottom: 1rem;
+        }
+        
+        .feature p {
+            color: var(--neutral);
+        }
+        
+        .cta {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 3rem 0;
+            text-align: center;
+            border-radius: 10px;
+            color: white;
+            margin-bottom: 3rem;
+        }
+        
+        .cta h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .cta p {
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            font-size: 1.1rem;
+        }
+        
+        .button-white {
+            background-color: white;
+            color: var(--primary);
+        }
+        
+        .button-white:hover {
+            background-color: #f0f0f0;
+        }
+        
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+        }
+        
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+        
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+        
+        .footer-links a:hover {
+            opacity: 0.8;
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+        
+        .social-links a {
+            color: white;
+            font-size: 1.5rem;
+            transition: transform 0.3s;
+        }
+        
+        .social-links a:hover {
+            transform: translateY(-5px);
+        }
+        
+        .copyright {
+            margin-top: 2rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            nav ul {
+                justify-content: center;
+                gap: 1rem;
+            }
+            
+            .breakdown {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Sentiment Analyzer Pro</span>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="#analyzer">Analyzer</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+    
+    <main class="container">
+        <section class="hero">
+            <h1>Analyze Review Sentiment with Precision</h1>
+            <p>Unlock the power of advanced sentiment analysis to discover how customers truly feel about your products or services. Get insights that drive business growth.</p>
+            <a href="#analyzer" class="button">Try It Now <i class="fas fa-arrow-right"></i></a>
+        </section>
+        
+        <section id="analyzer" class="analyzer">
+            <h2>Review Sentiment Analyzer</h2>
+            <div class="input-group">
+                <label for="review-text">Enter a review to analyze:</label>
+                <textarea id="review-text" placeholder="Paste your review text here..."></textarea>
+            </div>
+            <div class="button-group">
+                <button id="analyze-btn" class="button">Analyze Sentiment <i class="fas fa-search"></i></button>
+                <button id="clear-btn" class="button button-clear">Clear <i class="fas fa-times"></i></button>
+            </div>
+        </section>
+        
+        <section id="results" class="results">
+            <h2>Analysis Results</h2>
+            <div class="sentiment-score">
+                <div id="score-value" class="score-value">0.85</div>
+                <div id="sentiment-label" class="sentiment-label positive">Very Positive</div>
+            </div>
+            
+            <div class="meter">
+                <div id="meter-fill" class="meter-fill" style="width: 85%; background-color: var(--success);"></div>
+            </div>
+            
+            <div class="breakdown">
+                <div class="breakdown-item">
+                    <h3>Positive</h3>
+                    <div id="positive-percentage" class="percentage positive">75%</div>
+                    <p>Words & phrases with positive sentiment</p>
+                </div>
+                <div class="breakdown-item">
+                    <h3>Neutral</h3>
+                    <div id="neutral-percentage" class="percentage neutral">15%</div>
+                    <p>Words & phrases with neutral sentiment</p>
+                </div>
+                <div class="breakdown-item">
+                    <h3>Negative</h3>
+                    <div id="negative-percentage" class="percentage negative">10%</div>
+                    <p>Words & phrases with negative sentiment</p>
+                </div>
+            </div>
+            
+            <div class="key-phrases">
+                <h3>Key Sentiment Phrases</h3>
+                <div id="phrase-list" class="phrase-list">
+                    <span class="phrase" style="border-left: 4px solid var(--success);">great experience</span>
+                    <span class="phrase" style="border-left: 4px solid var(--success);">excellent service</span>
+                    <span class="phrase" style="border-left: 4px solid var(--neutral);">reasonable price</span>
+                    <span class="phrase" style="border-left: 4px solid var(--success);">highly recommend</span>
+                    <span class="phrase" style="border-left: 4px solid var(--danger);">slightly disappointing</span>
+                    <span class="phrase" style="border-left: 4px solid var(--success);">fast delivery</span>
+                </div>
+            </div>
+        </section>
+        
+        <section id="features" class="features">
+            <div class="feature">
+                <i class="fas fa-bolt"></i>
+                <h3>Real-time Analysis</h3>
+                <p>Get instant results as you analyze customer reviews with our lightning-fast sentiment processing engine.</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-chart-pie"></i>
+                <h3>Detailed Breakdown</h3>
+                <p>See the exact distribution of positive, negative, and neutral sentiments in each review.</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-search"></i>
+                <h3>Key Phrase Extraction</h3>
+                <p>Automatically identify the most impactful phrases that influence the overall sentiment score.</p>
+            </div>
+        </section>
+        
+        <section id="cta" class="cta">
+            <h2>Ready to Understand Your Customer Sentiment?</h2>
+            <p>Start turning reviews into actionable insights that help you improve product quality and customer satisfaction.</p>
+            <a href="#analyzer" class="button button-white">Start Analyzing Now</a>
+        </section>
+    </main>
+    
+    <footer id="contact">
+        <div class="container">
+            <div class="footer-content">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Sentiment Analyzer Pro</span>
+                </div>
+                <div class="footer-links">
+                    <a href="#analyzer">Analyzer</a>
+                    <a href="#features">Features</a>
+                    <a href="#about">About</a>
+                    <a href="#">API</a>
+                    <a href="#">Documentation</a>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                </div>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                    <a href="#"><i class="fab fa-github"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+                <div class="copyright">
+                    &copy; 2025 Sentiment Analyzer Pro. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const analyzeBtn = document.getElementById('analyze-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const reviewText = document.getElementById('review-text');
+            const resultsSection = document.getElementById('results');
+            const scoreValue = document.getElementById('score-value');
+            const sentimentLabel = document.getElementById('sentiment-label');
+            const meterFill = document.getElementById('meter-fill');
+            const positivePercentage = document.getElementById('positive-percentage');
+            const neutralPercentage = document.getElementById('neutral-percentage');
+            const negativePercentage = document.getElementById('negative-percentage');
+            const phraseList = document.getElementById('phrase-list');
+            
+            // Simple word lists for demo purposes
+            const positiveWords = ['good', 'great', 'excellent', 'amazing', 'outstanding', 'wonderful', 'fantastic', 'terrific', 'perfect', 'best', 'brilliant', 'superb', 'love', 'happy', 'impressed', 'recommend', 'positive', 'superior', 'exceptional', 'delighted'];
+            
+            const negativeWords = ['bad', 'poor', 'terrible', 'horrible', 'awful', 'disappointing', 'worst', 'hate', 'dislike', 'unhappy', 'inferior', 'useless', 'mediocre', 'negative', 'subpar', 'dissatisfied', 'defective', 'inadequate', 'unpleasant', 'frustrating'];
+            
+            analyzeBtn.addEventListener('click', function() {
+                const text = reviewText.value.toLowerCase();
+                
+                if (text.trim() === '') {
+                    alert('Please enter a review to analyze.');
+                    return;
+                }
+                
+                // Simple sentiment analysis for demo purposes
+                let positiveCount = 0;
+                let negativeCount = 0;
+                
+                // Count positive and negative words
+                const words = text.split(/\s+/);
+                for (const word of words) {
+                    const cleanWord = word.replace(/[^\w]/g, '');
+                    if (positiveWords.includes(cleanWord)) {
+                        positiveCount++;
+                    } else if (negativeWords.includes(cleanWord)) {
+                        negativeCount++;
+                    }
+                }
+                
+                // Calculate sentiment score (0 to 1)
+                const total = words.length;
+                const neutralCount = total - positiveCount - negativeCount;
+                
+                // Ensure there's at least some sentiment detected
+                if (positiveCount === 0 && negativeCount === 0) {
+                    positiveCount = 1; // Default to slightly positive for empty or neutral reviews
+                }
+                
+                const sentimentScore = (positiveCount + 0.5 * neutralCount) / (positiveCount + neutralCount + neutralCount);
+                
+                // Calculate percentages
+                const posPercentage = Math.round((positiveCount / total) * 100);
+                const negPercentage = Math.round((negativeCount / total) * 100);
+                const neuPercentage = 100 - posPercentage - negPercentage;
+                
+                // Update the UI
+                scoreValue.textContent = sentimentScore.toFixed(2);
+                meterFill.style.width = `${sentimentScore * 100}%`;
+                
+                // Set sentiment label and color
+                if (sentimentScore >= 0.75) {
+                    sentimentLabel.textContent = 'Very Positive';
+                    sentimentLabel.className = 'sentiment-label positive';
+                    meterFill.style.backgroundColor = 'var(--success)';
+                } else if (sentimentScore >= 0.6) {
+                    sentimentLabel.textContent = 'Positive';
+                    sentimentLabel.className = 'sentiment-label positive';
+                    meterFill.style.backgroundColor = 'var(--success)';
+                } else if (sentimentScore >= 0.4) {
+                    sentimentLabel.textContent = 'Neutral';
+                    sentimentLabel.className = 'sentiment-label neutral';
+                    meterFill.style.backgroundColor = 'var(--neutral)';
+                } else if (sentimentScore >= 0.25) {
+                    sentimentLabel.textContent = 'Negative';
+                    sentimentLabel.className = 'sentiment-label negative';
+                    meterFill.style.backgroundColor = 'var(--danger)';
+                } else {
+                    sentimentLabel.textContent = 'Very Negative';
+                    sentimentLabel.className = 'sentiment-label negative';
+                    meterFill.style.backgroundColor = 'var(--danger)';
+                }
+                
+                // Update percentages
+                positivePercentage.textContent = `${posPercentage}%`;
+                neutralPercentage.textContent = `${neuPercentage}%`;
+                negativePercentage.textContent = `${negPercentage}%`;
+                
+                // Extract key phrases (simple implementation for demo)
+                phraseList.innerHTML = '';
+                const phraseRegex = /\b\w+\s+\w+\b/g;
+                const phrases = text.match(phraseRegex) || [];
+                
+                // Get unique phrases
+                const uniquePhrases = [...new Set(phrases)];
+                const selectedPhrases = uniquePhrases.slice(0, 6); // Just show up to 6 phrases
+                
+                for (const phrase of selectedPhrases) {
+                    let color = 'var(--neutral)';
+                    
+                    // Check if phrase contains positive or negative words
+                    for (const word of positiveWords) {
+                        if (phrase.includes(word)) {
+                            color = 'var(--success)';
+                            break;
+                        }
+                    }
+                    
+                    if (color === 'var(--neutral)') {
+                        for (const word of negativeWords) {
+                            if (phrase.includes(word)) {
+                                color = 'var(--danger)';
+                                break;
+                            }
+                        }
+                    }
+                    
+                    const phraseElement = document.createElement('span');
+                    phraseElement.className = 'phrase';
+                    phraseElement.style.borderLeft = `4px solid ${color}`;
+                    phraseElement.textContent = phrase;
+                    phraseList.appendChild(phraseElement);
+                }
+                
+                // Show results section
+                resultsSection.style.display = 'block';
+                
+                // Scroll to results
+                resultsSection.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            clearBtn.addEventListener('click', function() {
+                reviewText.value = '';
+                resultsSection.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>
