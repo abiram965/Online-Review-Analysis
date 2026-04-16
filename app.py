@@ -20,7 +20,7 @@ socketio = SocketIO(app, async_mode="eventlet")
 # Load data and models
 from pymongo.mongo_client import MongoClient
 
-uri = "mongodb+srv://abiram965:Max2130@hue-ai.yz0lsny.mongodb.net/"
+uri = os.getenv("MONGO_URI")
 mongo_client = MongoClient(uri)
 db = mongo_client['product_reviews_db']
 collection = db['reviews']
