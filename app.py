@@ -18,7 +18,26 @@ socketio = SocketIO(app, async_mode="eventlet")
 
 ##checking
 # Load data and models
-df = pd.read_csv("flipkart.csv")
+from pymongo.mongo_client import MongoClient
+
+uri = "mongodb+srv://abiram965:Max2130@hue-ai.yz0lsny.mongodb.net/"
+mongo_client = MongoClient(uri)
+db = mongo_client['product_reviews_db']
+collection = db['reviews']
+
+# Data seeding on startup
+if collection.count_documents({}) == 0:
+    print("Empty MongoDB collection detected. Seeding from flipkart.csv...")
+    try:
+        seed_df = pd.read_csv("flipkart.csv")
+        seed_df = seed_df.dropna(subset=['Review'])
+        records = seed_df.to_dict('records')
+        if records:
+            collection.insert_many(records)
+        print("Seeding complete.")
+    except Exception as e:
+        print(f"Error seeding database: {e}")
+
 sentiment_model = pipeline("sentiment-analysis", model="nlptown/bert-base-multilingual-uncased-sentiment")
 emotion_model = pipeline("text-classification", model="bhadresh-savani/distilbert-base-uncased-emotion")
 nlp = spacy.load("en_core_web_sm")
@@ -54,8 +73,9 @@ def classify_aspect_sentiment(review):
     return sentiment_scores
 
 def chatbot_response(user_input, product_id):
-    product_reviews = df[df["ID"] == int(product_id)]["Review"].tolist()
-    context_reviews = "\n".join(product_reviews[:10])  # Use top 10 reviews for context
+    docs = collection.find({"ID": int(product_id)}, {"Review": 1}).limit(10)
+    product_reviews = [doc['Review'] for doc in docs if 'Review' in doc]
+    context_reviews = "\n".join(product_reviews)  # Use top 10 reviews for context
 
     prompt = f"""
 You are an AI assistant built to answer questions specifically about the 'E-Commerce Reviews Sentiment Analysis' project.
@@ -118,15 +138,20 @@ def handle_message(data):
 
 @app.route("/")
 def home():
-    products = df[['ID', 'Product_name']].drop_duplicates()
+    pipeline = [
+        {"$group": {"_id": "$ID", "Product_name": {"$first": "$Product_name"}}},
+        {"$project": {"ID": "$_id", "Product_name": 1, "_id": 0}}
+    ]
+    products = list(collection.aggregate(pipeline))
     
     # Add some stats for the dashboard
-    total_reviews = len(df)
+    total_reviews = collection.count_documents({})
     languages = set()
     positive_count = 0
     
     # Sample 100 reviews for stats calculation to avoid performance issues
-    sample_reviews = df["Review"].sample(min(100, len(df))).tolist()
+    sample_docs = list(collection.aggregate([{"$sample": {"size": 100}}]))
+    sample_reviews = [doc.get("Review", "") for doc in sample_docs if doc.get("Review")]
     
     for review in sample_reviews:
         _, lang = detect_and_translate(review)
@@ -138,11 +163,14 @@ def home():
         if "4" in label or "5" in label:
             positive_count += 1
     
-    positive_percentage = int((positive_count / len(sample_reviews)) * 100)
+    if len(sample_reviews) > 0:
+        positive_percentage = int((positive_count / len(sample_reviews)) * 100)
+    else:
+        positive_percentage = 0
     
     return render_template(
         "home.html", 
-        products=products.to_dict(orient='records'),
+        products=products,
         total_reviews=total_reviews,
         total_languages=len(languages),
         positive_percentage=positive_percentage
@@ -171,7 +199,8 @@ def process():
     return process_analysis(product_id)
 
 def process_analysis(product_id):
-    reviews = df[df["ID"] == int(product_id)]["Review"].tolist()
+    docs = collection.find({"ID": int(product_id)}, {"Review": 1})
+    reviews = [doc['Review'] for doc in docs if 'Review' in doc]
 
     if not reviews:
         return render_template("result.html", message="No reviews found.")

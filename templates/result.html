@@ -794,16 +794,7 @@
                     // If backend didn't provide reviews, add sample reviews for demonstration
                     const sampleReviews = [
                         {% for review in reviews %}
-                        {
-                            original: "{{ review.original }}",
-                            translated: "{{ review.translated }}",
-                            language: "{{ review.language }}",
-                            sentiment: "{{ 'Positive' if loop.index % 3 == 0 else 'Negative' if loop.index % 3 == 1 else 'Neutral' }}",
-                            aspects: [
-                                { name: "quality", sentiment: "Positive" },
-                                { name: "price", sentiment: "{{ 'Negative' if loop.index % 2 == 0 else 'Positive' }}" }
-                            ]
-                        },
+                        {{ review | tojson | safe }},
                         {% endfor %}
                     ];
                     

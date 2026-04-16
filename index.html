@@ -1,566 +1,151 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="antialiased">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentiment Analyzer Pro | Analyze Review Sentiment</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <title>SentimentAI | Next-Gen Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --primary: #4361ee;
-            --primary-dark: #3a56d4;
-            --secondary: #7209b7;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --success: #38b000;
-            --warning: #ffaa00;
-            --danger: #d00000;
-            --neutral: #6c757d;
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@400;500;600&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .font-outfit { font-family: 'Outfit', sans-serif; }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: #f0f2f5;
-            color: var(--dark);
-            line-height: 1.6;
-        }
-        
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 1rem 0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 1.8rem;
-            font-weight: 700;
-        }
-        
-        .logo i {
-            font-size: 2rem;
-        }
-        
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-        }
-        
-        nav a {
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: opacity 0.3s;
-        }
-        
-        nav a:hover {
-            opacity: 0.8;
-        }
-        
-        .hero {
-            background: white;
-            padding: 3rem 0;
-            text-align: center;
-            margin: 2rem 0;
-            border-radius: 10px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-        }
-        
-        .hero h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
+        .gradient-text {
+            background: linear-gradient(135deg, #a855f7, #ec4899, #f43f5e);
             -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+            -webkit-text-fill-color: transparent;
         }
-        
-        .hero p {
-            font-size: 1.2rem;
-            max-width: 800px;
-            margin: 0 auto 2rem;
-            color: var(--neutral);
+
+        .animated-blob {
+            animation: blob 8s infinite alternate;
         }
-        
-        .analyzer {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-        }
-        
-        .analyzer h2 {
-            text-align: center;
-            margin-bottom: 1.5rem;
-            color: var(--primary);
-        }
-        
-        .input-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .input-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-        
-        textarea {
-            width: 100%;
-            padding: 1rem;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            resize: vertical;
-            min-height: 150px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
-        }
-        
-        textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
-        }
-        
-        .button {
-            display: inline-block;
-            background-color: var(--primary);
-            color: white;
-            padding: 0.8rem 1.5rem;
-            border: none;
-            border-radius: 5px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
-            text-align: center;
-        }
-        
-        .button:hover {
-            background-color: var(--primary-dark);
-            transform: translateY(-2px);
-        }
-        
-        .button-group {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-        }
-        
-        .button-clear {
-            background-color: var(--neutral);
-        }
-        
-        .results {
-            display: none;
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-        }
-        
-        .results h2 {
-            text-align: center;
-            margin-bottom: 1.5rem;
-            color: var(--primary);
-        }
-        
-        .sentiment-score {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        
-        .score-value {
-            font-size: 4rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-        
-        .sentiment-label {
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-        
-        .positive {
-            color: var(--success);
-        }
-        
-        .neutral {
-            color: var(--neutral);
-        }
-        
-        .negative {
-            color: var(--danger);
-        }
-        
-        .meter {
-            height: 30px;
-            background-color: #eee;
-            border-radius: 15px;
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 2rem;
-        }
-        
-        .meter-fill {
-            height: 100%;
-            border-radius: 15px;
-            transition: width 1s ease-out;
-        }
-        
-        .breakdown {
-            display: flex;
-            justify-content: space-between;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-        
-        .breakdown-item {
-            flex: 1;
-            text-align: center;
-            padding: 1.5rem;
-            border-radius: 10px;
-            background-color: #f8f9fa;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-        
-        .breakdown-item h3 {
-            margin-bottom: 1rem;
-            color: var(--primary);
-        }
-        
-        .percentage {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-        
-        .key-phrases {
-            background-color: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 10px;
-        }
-        
-        .key-phrases h3 {
-            margin-bottom: 1rem;
-            color: var(--primary);
-            text-align: center;
-        }
-        
-        .phrase-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            justify-content: center;
-        }
-        
-        .phrase {
-            background-color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            font-size: 0.9rem;
-        }
-        
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-bottom: 3rem;
-        }
-        
-        .feature {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            transition: transform 0.3s;
-        }
-        
-        .feature:hover {
-            transform: translateY(-10px);
-        }
-        
-        .feature i {
-            font-size: 3rem;
-            color: var(--primary);
-            margin-bottom: 1.5rem;
-        }
-        
-        .feature h3 {
-            margin-bottom: 1rem;
-        }
-        
-        .feature p {
-            color: var(--neutral);
-        }
-        
-        .cta {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            padding: 3rem 0;
-            text-align: center;
-            border-radius: 10px;
-            color: white;
-            margin-bottom: 3rem;
-        }
-        
-        .cta h2 {
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .cta p {
-            max-width: 600px;
-            margin: 0 auto 2rem;
-            font-size: 1.1rem;
-        }
-        
-        .button-white {
-            background-color: white;
-            color: var(--primary);
-        }
-        
-        .button-white:hover {
-            background-color: #f0f0f0;
-        }
-        
-        footer {
-            background-color: var(--dark);
-            color: white;
-            padding: 3rem 0;
-            text-align: center;
-        }
-        
-        .footer-content {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-        
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 2rem;
-        }
-        
-        .footer-links a {
-            color: white;
-            text-decoration: none;
-            transition: opacity 0.3s;
-        }
-        
-        .footer-links a:hover {
-            opacity: 0.8;
-        }
-        
-        .social-links {
-            display: flex;
-            justify-content: center;
-            gap: 1.5rem;
-        }
-        
-        .social-links a {
-            color: white;
-            font-size: 1.5rem;
-            transition: transform 0.3s;
-        }
-        
-        .social-links a:hover {
-            transform: translateY(-5px);
-        }
-        
-        .copyright {
-            margin-top: 2rem;
-            color: rgba(255, 255, 255, 0.6);
-        }
-        
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-            
-            nav ul {
-                justify-content: center;
-                gap: 1rem;
-            }
-            
-            .breakdown {
-                flex-direction: column;
-                gap: 1rem;
-            }
+
+        @keyframes blob {
+            0% { transform: scale(1) translate(0px, 0px); }
+            50% { transform: scale(1.1) translate(20px, -30px); }
+            100% { transform: scale(0.95) translate(-20px, 10px); }
         }
     </style>
 </head>
-<body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Sentiment Analyzer Pro</span>
+<body class="bg-[#0b0f19] text-white min-h-screen relative overflow-x-hidden selection:bg-pink-500 selection:text-white">
+    
+    <!-- Dynamic Background Elements -->
+    <div class="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-600/30 blur-[120px] animated-blob pointer-events-none"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[30%] h-[40%] rounded-full bg-pink-600/20 blur-[100px] animated-blob pointer-events-none" style="animation-delay: 2s;"></div>
+
+    <nav class="container mx-auto px-6 py-8 relative z-10 flex justify-between items-center">
+        <div class="flex items-center gap-3 text-2xl font-outfit font-bold tracking-tight">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                <i class="fas fa-brain text-white text-xl"></i>
+            </div>
+            Sentiment<span class="text-pink-500">AI</span>
+        </div>
+        <div class="hidden md:flex gap-8 text-sm font-medium text-gray-300">
+            <a href="/" class="hover:text-white transition group flex items-center gap-2">Dashboard <span class="h-1 w-1 rounded-full bg-pink-500 opacity-0 group-hover:opacity-100 transition"></span></a>
+            <a href="#" class="hover:text-white transition group flex items-center gap-2">Live Analyzer <span class="h-1 w-1 rounded-full bg-pink-500 opacity-0 group-hover:opacity-100 transition"></span></a>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-6 py-12 relative z-10 max-w-5xl">
+        <header class="text-center mb-16 space-y-4">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-500/10 border border-pink-500/20 text-pink-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
+                </span>
+                Live Processing Engine Active
+            </div>
+            <h1 class="text-5xl md:text-7xl font-bold font-outfit tracking-tight leading-tight">
+                Decode Emotion <br /> With <span class="gradient-text">Absolute Precision</span>
+            </h1>
+            <p class="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto font-light">
+                Instantly extract structured sentiment, isolated sub-aspects, and core semantic emotion from raw customer feedback in real-time.
+            </p>
+        </header>
+
+        <section class="glass-panel p-2 rounded-3xl shadow-2xl overflow-hidden shadow-purple-900/20">
+            <div class="bg-[#131b2c] rounded-2xl p-6 md:p-10 border border-white/5">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold font-outfit flex gap-3 items-center">
+                        <i class="fas fa-terminal text-purple-400"></i> Analysis Workspace
+                    </h2>
                 </div>
-                <nav>
-                    <ul>
-                        <li><a href="#analyzer">Analyzer</a></li>
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="#about">About</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                    </ul>
-                </nav>
+                
+                <textarea id="review-text" class="w-full bg-[#0b0f19] border border-gray-800 rounded-xl p-5 text-gray-200 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all duration-300 resize-none h-40" placeholder="Paste user feedback, reviews, or social commentary here..."></textarea>
+                
+                <div class="mt-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <p class="text-xs text-gray-500 flex items-center gap-2"><i class="fas fa-shield-check"></i> End-to-end sentiment verification</p>
+                    <div class="flex gap-4 w-full md:w-auto">
+                        <button id="clear-btn" class="w-full md:w-auto px-6 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 font-semibold shadow-lg transition-all duration-200">
+                            Clear
+                        </button>
+                        <button id="analyze-btn" class="w-full md:w-auto px-8 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 font-semibold shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2">
+                            Execute Sequence <i class="fas fa-bolt text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Results Dashboard -->
+        <div id="results" class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 opacity-0 transition-opacity duration-500" style="display: none;">
+            <div class="glass-panel p-6 rounded-2xl hover:bg-white/10 transition flex items-center gap-4">
+                <div id="sentiment-icon-container" class="p-3 rounded-xl"><i id="sentiment-icon" class="fas fa-fw text-xl"></i></div>
+                <div>
+                     <p class="text-sm text-gray-400 font-medium tracking-wide">Polarity</p>
+                     <p id="sentiment-label" class="text-2xl font-bold font-outfit">N/A</p>
+                </div>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl hover:bg-white/10 transition flex flex-col justify-center gap-1">
+                <p class="text-sm text-gray-400 font-medium tracking-wide">General Score</p>
+                <div class="flex items-end gap-2">
+                    <p id="score-value" class="text-3xl font-bold font-outfit">0.00</p>
+                    <span class="text-sm text-gray-500 mb-1">/ 1.00</span>
+                </div>
+                <div class="w-full h-2 bg-gray-800 rounded-full mt-2 overflow-hidden">
+                    <div id="meter-fill" class="h-full rounded-full transition-all duration-1000" style="width: 0%;"></div>
+                </div>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl hover:bg-white/10 transition flex flex-col justify-center gap-2">
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-emerald-400">Positive</span>
+                    <span id="positive-percentage" class="text-gray-300 font-bold">0%</span>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-amber-400">Neutral</span>
+                    <span id="neutral-percentage" class="text-gray-300 font-bold">0%</span>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-rose-400">Negative</span>
+                    <span id="negative-percentage" class="text-gray-300 font-bold">0%</span>
+                </div>
+            </div>
+
+            <!-- Key Phrases Section -->
+            <div class="md:col-span-3 glass-panel p-6 rounded-2xl hover:bg-white/10 transition mt-2">
+                <h3 class="text-lg font-outfit font-semibold mb-4 text-purple-300"><i class="fas fa-tags mr-2"></i>Extracted Entities & Phrases</h3>
+                <div id="phrase-list" class="flex flex-wrap gap-2 text-sm font-medium">
+                </div>
             </div>
         </div>
-    </header>
-    
-    <main class="container">
-        <section class="hero">
-            <h1>Analyze Review Sentiment with Precision</h1>
-            <p>Unlock the power of advanced sentiment analysis to discover how customers truly feel about your products or services. Get insights that drive business growth.</p>
-            <a href="#analyzer" class="button">Try It Now <i class="fas fa-arrow-right"></i></a>
-        </section>
-        
-        <section id="analyzer" class="analyzer">
-            <h2>Review Sentiment Analyzer</h2>
-            <div class="input-group">
-                <label for="review-text">Enter a review to analyze:</label>
-                <textarea id="review-text" placeholder="Paste your review text here..."></textarea>
-            </div>
-            <div class="button-group">
-                <button id="analyze-btn" class="button">Analyze Sentiment <i class="fas fa-search"></i></button>
-                <button id="clear-btn" class="button button-clear">Clear <i class="fas fa-times"></i></button>
-            </div>
-        </section>
-        
-        <section id="results" class="results">
-            <h2>Analysis Results</h2>
-            <div class="sentiment-score">
-                <div id="score-value" class="score-value">0.85</div>
-                <div id="sentiment-label" class="sentiment-label positive">Very Positive</div>
-            </div>
-            
-            <div class="meter">
-                <div id="meter-fill" class="meter-fill" style="width: 85%; background-color: var(--success);"></div>
-            </div>
-            
-            <div class="breakdown">
-                <div class="breakdown-item">
-                    <h3>Positive</h3>
-                    <div id="positive-percentage" class="percentage positive">75%</div>
-                    <p>Words & phrases with positive sentiment</p>
-                </div>
-                <div class="breakdown-item">
-                    <h3>Neutral</h3>
-                    <div id="neutral-percentage" class="percentage neutral">15%</div>
-                    <p>Words & phrases with neutral sentiment</p>
-                </div>
-                <div class="breakdown-item">
-                    <h3>Negative</h3>
-                    <div id="negative-percentage" class="percentage negative">10%</div>
-                    <p>Words & phrases with negative sentiment</p>
-                </div>
-            </div>
-            
-            <div class="key-phrases">
-                <h3>Key Sentiment Phrases</h3>
-                <div id="phrase-list" class="phrase-list">
-                    <span class="phrase" style="border-left: 4px solid var(--success);">great experience</span>
-                    <span class="phrase" style="border-left: 4px solid var(--success);">excellent service</span>
-                    <span class="phrase" style="border-left: 4px solid var(--neutral);">reasonable price</span>
-                    <span class="phrase" style="border-left: 4px solid var(--success);">highly recommend</span>
-                    <span class="phrase" style="border-left: 4px solid var(--danger);">slightly disappointing</span>
-                    <span class="phrase" style="border-left: 4px solid var(--success);">fast delivery</span>
-                </div>
-            </div>
-        </section>
-        
-        <section id="features" class="features">
-            <div class="feature">
-                <i class="fas fa-bolt"></i>
-                <h3>Real-time Analysis</h3>
-                <p>Get instant results as you analyze customer reviews with our lightning-fast sentiment processing engine.</p>
-            </div>
-            <div class="feature">
-                <i class="fas fa-chart-pie"></i>
-                <h3>Detailed Breakdown</h3>
-                <p>See the exact distribution of positive, negative, and neutral sentiments in each review.</p>
-            </div>
-            <div class="feature">
-                <i class="fas fa-search"></i>
-                <h3>Key Phrase Extraction</h3>
-                <p>Automatically identify the most impactful phrases that influence the overall sentiment score.</p>
-            </div>
-        </section>
-        
-        <section id="cta" class="cta">
-            <h2>Ready to Understand Your Customer Sentiment?</h2>
-            <p>Start turning reviews into actionable insights that help you improve product quality and customer satisfaction.</p>
-            <a href="#analyzer" class="button button-white">Start Analyzing Now</a>
-        </section>
     </main>
-    
-    <footer id="contact">
-        <div class="container">
-            <div class="footer-content">
-                <div class="logo">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Sentiment Analyzer Pro</span>
-                </div>
-                <div class="footer-links">
-                    <a href="#analyzer">Analyzer</a>
-                    <a href="#features">Features</a>
-                    <a href="#about">About</a>
-                    <a href="#">API</a>
-                    <a href="#">Documentation</a>
-                    <a href="#">Privacy</a>
-                    <a href="#">Terms</a>
-                </div>
-                <div class="social-links">
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-linkedin"></i></a>
-                    <a href="#"><i class="fab fa-github"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                </div>
-                <div class="copyright">
-                    &copy; 2025 Sentiment Analyzer Pro. All rights reserved.
-                </div>
-            </div>
-        </div>
-    </footer>
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const analyzeBtn = document.getElementById('analyze-btn');
             const clearBtn = document.getElementById('clear-btn');
             const reviewText = document.getElementById('review-text');
             const resultsSection = document.getElementById('results');
+            
             const scoreValue = document.getElementById('score-value');
             const sentimentLabel = document.getElementById('sentiment-label');
             const meterFill = document.getElementById('meter-fill');
@@ -568,26 +153,24 @@
             const neutralPercentage = document.getElementById('neutral-percentage');
             const negativePercentage = document.getElementById('negative-percentage');
             const phraseList = document.getElementById('phrase-list');
-            
-            // Simple word lists for demo purposes
+            const sentimentIconContainer = document.getElementById('sentiment-icon-container');
+            const sentimentIcon = document.getElementById('sentiment-icon');
+
+            // Lexicons for analysis
             const positiveWords = ['good', 'great', 'excellent', 'amazing', 'outstanding', 'wonderful', 'fantastic', 'terrific', 'perfect', 'best', 'brilliant', 'superb', 'love', 'happy', 'impressed', 'recommend', 'positive', 'superior', 'exceptional', 'delighted'];
-            
             const negativeWords = ['bad', 'poor', 'terrible', 'horrible', 'awful', 'disappointing', 'worst', 'hate', 'dislike', 'unhappy', 'inferior', 'useless', 'mediocre', 'negative', 'subpar', 'dissatisfied', 'defective', 'inadequate', 'unpleasant', 'frustrating'];
             
             analyzeBtn.addEventListener('click', function() {
                 const text = reviewText.value.toLowerCase();
-                
                 if (text.trim() === '') {
                     alert('Please enter a review to analyze.');
                     return;
                 }
                 
-                // Simple sentiment analysis for demo purposes
                 let positiveCount = 0;
                 let negativeCount = 0;
-                
-                // Count positive and negative words
                 const words = text.split(/\s+/);
+                
                 for (const word of words) {
                     const cleanWord = word.replace(/[^\w]/g, '');
                     if (positiveWords.includes(cleanWord)) {
@@ -597,100 +180,75 @@
                     }
                 }
                 
-                // Calculate sentiment score (0 to 1)
                 const total = words.length;
                 const neutralCount = total - positiveCount - negativeCount;
+                if (positiveCount === 0 && negativeCount === 0) positiveCount = 1; 
+
+                // BUG FIX: Accurate math calculation here
+                const sentimentScore = (positiveCount + 0.5 * neutralCount) / Math.max(1, (positiveCount + neutralCount + negativeCount));
                 
-                // Ensure there's at least some sentiment detected
-                if (positiveCount === 0 && negativeCount === 0) {
-                    positiveCount = 1; // Default to slightly positive for empty or neutral reviews
-                }
-                
-                const sentimentScore = (positiveCount + 0.5 * neutralCount) / (positiveCount + neutralCount + neutralCount);
-                
-                // Calculate percentages
                 const posPercentage = Math.round((positiveCount / total) * 100);
                 const negPercentage = Math.round((negativeCount / total) * 100);
-                const neuPercentage = 100 - posPercentage - negPercentage;
+                const neuPercentage = Math.max(0, 100 - posPercentage - negPercentage);
                 
-                // Update the UI
                 scoreValue.textContent = sentimentScore.toFixed(2);
                 meterFill.style.width = `${sentimentScore * 100}%`;
                 
-                // Set sentiment label and color
-                if (sentimentScore >= 0.75) {
-                    sentimentLabel.textContent = 'Very Positive';
-                    sentimentLabel.className = 'sentiment-label positive';
-                    meterFill.style.backgroundColor = 'var(--success)';
-                } else if (sentimentScore >= 0.6) {
-                    sentimentLabel.textContent = 'Positive';
-                    sentimentLabel.className = 'sentiment-label positive';
-                    meterFill.style.backgroundColor = 'var(--success)';
+                // Color & Label Assignments
+                if (sentimentScore >= 0.6) {
+                    sentimentLabel.textContent = sentimentScore >= 0.8 ? 'Highly Positive' : 'Positive';
+                    sentimentLabel.className = 'text-2xl font-bold font-outfit text-emerald-400';
+                    meterFill.className = 'h-full rounded-full transition-all duration-1000 bg-emerald-500';
+                    sentimentIconContainer.className = 'p-3 bg-emerald-500/20 text-emerald-400 rounded-xl';
+                    sentimentIcon.className = 'fas fa-smile-beam fa-fw text-xl';
                 } else if (sentimentScore >= 0.4) {
                     sentimentLabel.textContent = 'Neutral';
-                    sentimentLabel.className = 'sentiment-label neutral';
-                    meterFill.style.backgroundColor = 'var(--neutral)';
-                } else if (sentimentScore >= 0.25) {
-                    sentimentLabel.textContent = 'Negative';
-                    sentimentLabel.className = 'sentiment-label negative';
-                    meterFill.style.backgroundColor = 'var(--danger)';
+                    sentimentLabel.className = 'text-2xl font-bold font-outfit text-amber-400';
+                    meterFill.className = 'h-full rounded-full transition-all duration-1000 bg-amber-500';
+                    sentimentIconContainer.className = 'p-3 bg-amber-500/20 text-amber-400 rounded-xl';
+                    sentimentIcon.className = 'fas fa-meh fa-fw text-xl';
                 } else {
-                    sentimentLabel.textContent = 'Very Negative';
-                    sentimentLabel.className = 'sentiment-label negative';
-                    meterFill.style.backgroundColor = 'var(--danger)';
+                    sentimentLabel.textContent = sentimentScore <= 0.2 ? 'Highly Negative' : 'Negative';
+                    sentimentLabel.className = 'text-2xl font-bold font-outfit text-rose-400';
+                    meterFill.className = 'h-full rounded-full transition-all duration-1000 bg-rose-500';
+                    sentimentIconContainer.className = 'p-3 bg-rose-500/20 text-rose-400 rounded-xl';
+                    sentimentIcon.className = 'fas fa-frown fa-fw text-xl';
                 }
                 
-                // Update percentages
                 positivePercentage.textContent = `${posPercentage}%`;
                 neutralPercentage.textContent = `${neuPercentage}%`;
                 negativePercentage.textContent = `${negPercentage}%`;
                 
-                // Extract key phrases (simple implementation for demo)
+                // Entity simulation
                 phraseList.innerHTML = '';
                 const phraseRegex = /\b\w+\s+\w+\b/g;
                 const phrases = text.match(phraseRegex) || [];
+                const uniquePhrases = [...new Set(phrases)].slice(0, 6);
                 
-                // Get unique phrases
-                const uniquePhrases = [...new Set(phrases)];
-                const selectedPhrases = uniquePhrases.slice(0, 6); // Just show up to 6 phrases
-                
-                for (const phrase of selectedPhrases) {
-                    let color = 'var(--neutral)';
-                    
-                    // Check if phrase contains positive or negative words
+                for (const phrase of uniquePhrases) {
+                    let colorClass = 'bg-gray-800 text-gray-300 border-gray-600';
                     for (const word of positiveWords) {
-                        if (phrase.includes(word)) {
-                            color = 'var(--success)';
-                            break;
-                        }
+                        if (phrase.includes(word)) { colorClass = 'bg-emerald-900/40 text-emerald-300 border-emerald-500/40'; break; }
                     }
-                    
-                    if (color === 'var(--neutral)') {
+                    if (colorClass.includes('gray')) {
                         for (const word of negativeWords) {
-                            if (phrase.includes(word)) {
-                                color = 'var(--danger)';
-                                break;
-                            }
+                            if (phrase.includes(word)) { colorClass = 'bg-rose-900/40 text-rose-300 border-rose-500/40'; break; }
                         }
                     }
-                    
                     const phraseElement = document.createElement('span');
-                    phraseElement.className = 'phrase';
-                    phraseElement.style.borderLeft = `4px solid ${color}`;
+                    phraseElement.className = `px-3 py-1 border rounded-full ${colorClass}`;
                     phraseElement.textContent = phrase;
                     phraseList.appendChild(phraseElement);
                 }
                 
-                // Show results section
-                resultsSection.style.display = 'block';
-                
-                // Scroll to results
-                resultsSection.scrollIntoView({ behavior: 'smooth' });
+                resultsSection.style.display = 'grid';
+                setTimeout(() => resultsSection.classList.remove('opacity-0'), 50);
             });
             
             clearBtn.addEventListener('click', function() {
                 reviewText.value = '';
-                resultsSection.style.display = 'none';
+                resultsSection.classList.add('opacity-0');
+                setTimeout(() => resultsSection.style.display = 'none', 500);
             });
         });
     </script>
